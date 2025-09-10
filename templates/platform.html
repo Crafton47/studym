@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Study Material Access Platform</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/animations.css" />
+</head>
+<body>
+
+  
+  <header style="animation: slideInUp 1s ease;">
+    <h1>🎓 Smart Study Material Access Platform</h1>
+    <div style="position: absolute; top: 20px; right: 20px; color: white;">
+      Welcome, {{ username }}! 
+      <a href="/profile" style="color: #28a745; text-decoration: none; margin-left: 10px;">📧 Profile</a>
+      <a href="/logout" style="color: #ff4d4d; text-decoration: none; margin-left: 10px;">Logout</a>
+    </div>
+  </header>
+
+  <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+    <section id="student-section" class="animated-card" style="flex: 1; min-width: 300px;">
+      <h2>📚 Access Materials</h2>
+      <input type="text" id="student-id" placeholder="Enter Student ID" />
+      <br><br>
+      <select id="course-name">
+        <option value="">Select Course</option>
+        <option value="physics">Physics</option>
+        <option value="chemistry">Chemistry</option>
+        <option value="electrical">Electrical Engineering</option>
+        <option value="computer">Computer Science</option>
+        <option value="mechanical">Mechanical Engineering</option>
+        <option value="mathematics">Mathematics</option>
+        <option value="biology">Biology</option>
+        <option value="other">Other</option>
+      </select>
+      <br><br>
+      <button class="animated-btn" onclick="window.location.href='/search-materials'">🔍 Search Materials</button>
+    </section>
+
+    <section id="teacher-section" class="animated-card" style="flex: 1; min-width: 300px; background: #e8f5e8; border: 2px solid #28a745; border-radius: 8px; padding: 15px;">
+      <h2>👨‍🏫 Teacher Panel</h2>
+      <p>Upload and manage study materials for students</p>
+      <button class="animated-btn" onclick="window.location.href='/teacher-upload'" style="background: #28a745;">📤 Upload Materials</button>
+      <button class="animated-btn" onclick="loadUploadedMaterials()" style="background: #17a2b8; margin-top: 10px;">📋 View Uploads</button>
+      <div id="teacher-materials" style="margin-top: 15px; max-height: 200px; overflow-y: auto;"></div>
+    </section>
+  </div>
+
+  <hr />
+
+  <section id="exam-mode">
+    <h2>🎯 Exam Mode</h2>
+    <button class="animated-btn" onclick="window.location.href='/exam-mode'">🚀 Start Exam</button>
+    <div id="exam-questions"></div>
+    <div id="exam-analysis"></div>
+  </section>
+
+  <hr />
+
+  <section id="leaderboard">
+    <h2>🏆 Leaderboard</h2>
+    <table>
+      <thead>
+        <tr><th>Position</th><th>Name</th><th>Score</th></tr>
+      </thead>
+      <tbody id="leaderboard-data">
+        <!-- Data will load here -->
+      </tbody>
+    </table>
+  </section>
+
+  <hr />
+
+  <section id="progress-tracker">
+    <h2>📈 Your Progress</h2>
+    <progress id="progress-bar" value="0" max="100"></progress>
+    <p id="progress-text">0% Completed</p>
+  </section>
+
+  <hr />
+
+  <section id="mistake-analysis">
+    <h2>🧠 Mistakes & Insights</h2>
+    <div id="mistake-list">
+      <!-- Mistake breakdown -->
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Smart Study Platform</p>
+  </footer>
+
+  <script src="/static/script.js"></script>
+  <script>
+    // Optimized initialization
+    document.addEventListener('DOMContentLoaded', function() {
+      // Simple button feedback
+      document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('animated-btn')) {
+          e.target.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            e.target.style.transform = '';
+          }, 100);
+        }
+      });
+      
+      // Load leaderboard
+      loadLeaderboard();
+    });
+    
+    function loadLeaderboard() {
+      const tbody = document.getElementById('leaderboard-data');
+      if (!tbody) return;
+      
+      tbody.innerHTML = '<tr><td colspan="3">Loading...</td></tr>';
+      
+      fetch('/api/leaderboard')
+        .then(response => response.json())
+        .then(data => {
+          console.log('Received data:', data);
+          if (data && data.length > 0) {
+            let html = '';
+            data.forEach((entry, index) => {
+              html += `<tr><td>${index + 1}</td><td>${entry.name}</td><td>${entry.score} (${entry.average}%)</td></tr>`;
+            });
+            tbody.innerHTML = html;
+          } else {
+            tbody.innerHTML = '<tr><td colspan="3">No exam results yet</td></tr>';
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          tbody.innerHTML = '<tr><td colspan="3">Error loading data</td></tr>';
+        });
+    }
+    
+  <script>
+    // Check if user is teacher and show teacher section
+    fetch('/api/user-role')
+      .then(response => response.json())
+      .then(data => {
+        if (data.role === 'teacher') {
+          document.getElementById('teacher-section').style.display = 'block';
+        } else {
+          document.getElementById('teacher-section').innerHTML = `
+            <h2>👨🏫 Teacher Panel</h2>
+            <p style="color: #666;">Register as a teacher to upload materials</p>
+            <a href="/register" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Register as Teacher</a>
+          `;
+        }
+      })
+      .catch(error => {
+        console.log('Role check failed:', error);
+        document.getElementById('teacher-section').innerHTML = `
+          <h2>👨🏫 Teacher Panel</h2>
+          <p style="color: #666;">Login required to access teacher features</p>
+        `;
+      });
+
+    // Function to load uploaded materials for teachers
+    function loadUploadedMaterials() {
+      fetch('/api/materials')
+        .then(response => response.json())
+        .then(data => {
+          const container = document.getElementById('teacher-materials');
+          container.innerHTML = data.slice(0, 5).map(material => 
+            `<div style="background: #f8f9fa; padding: 8px; margin: 5px 0; border-radius: 4px; font-size: 12px;">
+              <strong>${material.title}</strong><br>
+              ${material.subject} - ${material.type}
+            </div>`
+          ).join('') || '<p>No materials uploaded yet.</p>';
+        })
+        .catch(error => {
+          document.getElementById('teacher-materials').innerHTML = '<p>Error loading materials.</p>';
+        });
+    }
+
+    // Load leaderboard data
+    loadLeaderboard();
+    });
+  </script>
+</body>
+</html>

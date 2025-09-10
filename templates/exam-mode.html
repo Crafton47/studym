@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exam Mode - Smart Study Platform</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <style>
+    .exam-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .exam-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .timer {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #dc3545;
+    }
+    .question-card {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .options {
+      margin: 15px 0;
+    }
+    .option {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      background: #fff;
+      border: 2px solid #e9ecef;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .option:hover {
+      border-color: #007bff;
+    }
+    .option.selected {
+      border-color: #007bff;
+      background: #e3f2fd;
+    }
+    .navigation {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    .question-nav {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .question-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #ccc;
+      background: #fff;
+      cursor: pointer;
+    }
+    .question-btn.answered {
+      background: #28a745;
+      color: #fff;
+    }
+    .question-btn.current {
+      background: #007bff;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Exam Mode</h1>
+  </header>
+
+  <div class="exam-container">
+    <section>
+      <div class="exam-header">
+        <h2>Question <span id="current-question">1</span> of <span id="total-questions">10</span></h2>
+        <div class="timer">Time: <span id="timer">30:00</span></div>
+      </div>
+
+      <div class="question-card">
+        <h3 id="question-text">What is the capital of France?</h3>
+        <div class="options" id="options-container">
+          <label class="option">
+            <input type="radio" name="answer" value="A" style="margin-right: 10px;">
+            Paris
+          </label>
+          <label class="option">
+            <input type="radio" name="answer" value="B" style="margin-right: 10px;">
+            London
+          </label>
+          <label class="option">
+            <input type="radio" name="answer" value="C" style="margin-right: 10px;">
+            Berlin
+          </label>
+          <label class="option">
+            <input type="radio" name="answer" value="D" style="margin-right: 10px;">
+            Madrid
+          </label>
+        </div>
+      </div>
+
+      <div class="navigation">
+        <button id="prev-btn" onclick="previousQuestion()">Previous</button>
+        <div class="question-nav" id="question-nav">
+          <!-- Question navigation buttons will be generated here -->
+        </div>
+        <button id="next-btn" onclick="nextQuestion()">Next</button>
+      </div>
+
+      <div style="text-align: center; margin-top: 30px;">
+        <button onclick="submitExam()" style="background: #28a745;">Submit Exam</button>
+        <button onclick="goBack()" style="background: #6c757d;">Back to Platform</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    let currentQuestion = 1;
+    let totalQuestions = 10;
+    let timeLeft = 1800; // 30 minutes in seconds
+
+    // Initialize question navigation
+    function initQuestionNav() {
+      const nav = document.getElementById('question-nav');
+      for (let i = 1; i <= totalQuestions; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'question-btn';
+        btn.textContent = i;
+        btn.onclick = () => goToQuestion(i);
+        if (i === 1) btn.classList.add('current');
+        nav.appendChild(btn);
+      }
+    }
+
+    // Timer function
+    function startTimer() {
+      const timer = setInterval(() => {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        document.getElementById('timer').textContent = 
+          `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          alert('Time is up! Submitting exam...');
+          submitExam();
+        }
+        timeLeft--;
+      }, 1000);
+    }
+
+    function nextQuestion() {
+      if (currentQuestion < totalQuestions) {
+        currentQuestion++;
+        updateQuestion();
+      }
+    }
+
+    function previousQuestion() {
+      if (currentQuestion > 1) {
+        currentQuestion--;
+        updateQuestion();
+      }
+    }
+
+    function goToQuestion(num) {
+      currentQuestion = num;
+      updateQuestion();
+    }
+
+    function updateQuestion() {
+      document.getElementById('current-question').textContent = currentQuestion;
+      
+      // Update navigation buttons
+      document.querySelectorAll('.question-btn').forEach((btn, index) => {
+        btn.classList.remove('current');
+        if (index + 1 === currentQuestion) {
+          btn.classList.add('current');
+        }
+      });
+      
+      // Enable/disable navigation buttons
+      document.getElementById('prev-btn').disabled = currentQuestion === 1;
+      document.getElementById('next-btn').disabled = currentQuestion === totalQuestions;
+    }
+
+    function submitExam() {
+      if (confirm('Are you sure you want to submit the exam?')) {
+        const name = prompt('Enter your name for the leaderboard:');
+        if (name) {
+          // Calculate score based on answered questions (demo calculation)
+          const answeredQuestions = document.querySelectorAll('.question-btn.answered').length;
+          const score = Math.floor((answeredQuestions / totalQuestions) * 100);
+          
+          fetch('/submit-exam-result', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({student_name: name, marks: score, total_marks: 100})
+          })
+          .then(response => response.json())
+          .then(data => {
+            alert(`Exam completed! Your score: ${score}% has been added to the leaderboard.`);
+            window.location.href = '/platform';
+          })
+          .catch(error => {
+            alert('Error submitting exam. Please try again.');
+          });
+        }
+      }
+    }
+
+    function goBack() {
+      if (confirm('Are you sure you want to go back? Your progress will be lost.')) {
+        window.location.href = '/platform';
+      }
+    }
+
+    // Initialize the exam
+    window.onload = function() {
+      initQuestionNav();
+      startTimer();
+      updateQuestion();
+    };
+
+    // Handle option selection
+    document.addEventListener('change', function(e) {
+      if (e.target.name === 'answer') {
+        // Mark question as answered
+        document.querySelectorAll('.question-btn')[currentQuestion - 1].classList.add('answered');
+      }
+    });
+  </script>
+</body>
+</html>

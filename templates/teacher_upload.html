@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teacher Upload - Smart Study Platform</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/animations.css" />
+</head>
+<body>
+  <header style="animation: slideInUp 0.8s ease;">
+    <h1 class="typewriter">👨🏫 Teacher Material Upload</h1>
+    <div style="position: absolute; top: 20px; right: 20px; color: white;">
+      <a href="/platform" style="color: white; text-decoration: none; margin-right: 15px;">← Back to Platform</a>
+      <a href="/logout" style="color: #ff4d4d; text-decoration: none;">Logout</a>
+    </div>
+  </header>
+
+  <section id="upload-section">
+    <h2>📤 Upload Study Material</h2>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <div style="margin: 15px 0;">
+        <label>Material Title:</label>
+        <input type="text" name="title" placeholder="e.g., Calculus Fundamentals" required>
+      </div>
+      
+      <div style="margin: 15px 0;">
+        <label>Subject:</label>
+        <select name="subject" required>
+          <option value="">Select Subject</option>
+          <option value="Mathematics">Mathematics</option>
+          <option value="Physics">Physics</option>
+          <option value="Chemistry">Chemistry</option>
+          <option value="Computer Science">Computer Science</option>
+          <option value="Biology">Biology</option>
+          <option value="Engineering">Engineering</option>
+        </select>
+      </div>
+      
+      <div style="margin: 15px 0;">
+        <label>Material Type:</label>
+        <select name="type" required>
+          <option value="">Select Type</option>
+          <option value="notes">Notes</option>
+          <option value="assignments">Assignment</option>
+          <option value="practice">Practice Test</option>
+          <option value="reference">Reference Material</option>
+        </select>
+      </div>
+      
+      <div style="margin: 15px 0;">
+        <label>Upload PDF File:</label>
+        <input type="file" name="file" accept=".pdf" required style="padding: 10px; width: 100%;">
+      </div>
+      
+      <button type="submit" class="animated-btn">🚀 Upload Material</button>
+    </form>
+  </section>
+
+  <section id="uploaded-materials">
+    <h2>📋 Recently Uploaded Materials</h2>
+    <div id="materials-list">
+      <!-- Materials will be loaded here -->
+    </div>
+  </section>
+
+  <script>
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const submitBtn = this.querySelector('button[type="submit"]');
+      
+      // Show loading state
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Uploading...';
+      
+      fetch('/upload-material', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          alert(data.message || 'Material uploaded successfully!');
+          this.reset();
+          loadMaterials();
+        } else {
+          alert('Error: ' + (data.error || 'Upload failed'));
+        }
+      })
+      .catch(error => {
+        console.error('Upload error:', error);
+        alert('Error uploading material: ' + error.message);
+      })
+      .finally(() => {
+        // Reset button state
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Upload Material';
+      });
+    });
+
+    function loadMaterials() {
+      fetch('/api/materials')
+        .then(response => response.json())
+        .then(data => {
+          const list = document.getElementById('materials-list');
+          list.innerHTML = data.map(material => 
+            `<div class="result-item">
+              <h4>${material.title}</h4>
+              <p>Subject: ${material.subject} | Type: ${material.type}</p>
+              <p>File: ${material.filename}</p>
+            </div>`
+          ).join('');
+        });
+    }
+
+    // Load materials on page load
+    loadMaterials();
+  </script>
+</body>
+</html>

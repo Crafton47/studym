@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1e1e60, #3a0ca3, #7209b7);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.06), transparent 40%),
+                        radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.04), transparent 40%);
+            animation: floatBackground 20s linear infinite;
+        }
+
+        @keyframes floatBackground {
+            from { transform: translate(0, 0); }
+            to { transform: translate(-10%, -10%); }
+        }
+
+        .register-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 45px;
+            width: 380px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            z-index: 2;
+            position: relative;
+        }
+
+        h2 {
+            margin-bottom: 24px;
+            font-size: 30px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+
+        input::placeholder {
+            color: #e0d9f7;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        input[type="submit"] {
+            width: 100%;
+            padding: 14px;
+            margin-top: 22px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+
+        input[type="submit"]:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.6);
+        }
+
+        .error {
+            color: #ec5665;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .success {
+            color: #28a745;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 0.85em;
+            color: #d3c9ca;
+            opacity: 0.8;
+        }
+
+        .login-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #4dabf7;
+            font-weight: bold;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .login-link:hover {
+            color: #339af0;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-box">
+        <h2>📝 Create Account 📝</h2>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        {% if success %}
+            <div class="success">{{ success }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <input type="text" name="username" placeholder="Choose Username (min 3 chars)" required>
+            <input type="password" name="password" placeholder="Choose Password (min 6 chars)" required>
+            <input type="email" name="email" placeholder="Email Address (optional)" style="width: 100%; padding: 14px; margin: 10px 0; border: none; border-radius: 10px; background: rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 16px;">
+            <select name="role" style="width: 100%; padding: 14px; margin: 10px 0; border: none; border-radius: 10px; background: rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 16px;">
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+            </select>
+            <input type="submit" value="Create Account">
+        </form>
+
+        <a href="/login" class="login-link">Already have an account? Login here</a>
+
+        <div class="footer">© 2025 Smart Study Platform • All rights reserved</div>
+    </div>
+</body>
+</html>

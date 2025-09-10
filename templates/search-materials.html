@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Search Study Materials</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/animations.css" />
+</head>
+<body>
+
+  
+  <header style="animation: slideInUp 0.8s ease;">
+    <h1 class="typewriter">🔍 Search Study Materials</h1>
+    <nav>
+      <a href="/platform">← Back to Platform</a>
+    </nav>
+  </header>
+
+  <section id="search-section">
+    <h2>🎯 Find Your Study Materials</h2>
+    <div class="search-container">
+      <input type="text" id="search-query" placeholder="Search by subject, topic, or keyword..." />
+      <select id="filter-type">
+        <option value="all">All Materials</option>
+        <option value="notes">Notes</option>
+        <option value="videos">Videos</option>
+        <option value="assignments">Assignments</option>
+        <option value="practice">Practice Tests</option>
+      </select>
+      <button class="animated-btn" onclick="searchMaterials()">🚀 Search</button>
+    </div>
+  </section>
+
+  <section id="search-results">
+    <h3>📊 Search Results</h3>
+    <div id="results-container">
+      <!-- Search results will appear here -->
+    </div>
+  </section>
+
+  <script>
+    // Simple button effects
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add simple hover effects
+      document.querySelectorAll('input, select').forEach(input => {
+        input.style.transition = 'all 0.3s ease';
+      });
+    });
+    
+    // Load materials on page load
+    window.onload = function() {
+      searchMaterials();
+    };
+    
+    function searchMaterials() {
+      const query = document.getElementById('search-query').value;
+      const filter = document.getElementById('filter-type').value;
+      const resultsContainer = document.getElementById('results-container');
+      
+      // Load materials from database
+      fetch('/api/materials')
+        .then(response => response.json())
+        .then(materials => {
+          // Add default materials if database is empty
+          const defaultMaterials = [
+            { title: 'Mathematics - Calculus Notes', type: 'notes', subject: 'Mathematics' },
+            { title: 'Physics - Quantum Mechanics Video', type: 'videos', subject: 'Physics' },
+            { title: 'Chemistry - Organic Chemistry Assignment', type: 'assignments', subject: 'Chemistry' },
+            { title: 'Computer Science - Data Structures Practice', type: 'practice', subject: 'Computer Science' }
+          ];
+          
+          const allMaterials = materials.length > 0 ? materials : defaultMaterials;
+          
+          // Filter materials based on search
+          const filteredMaterials = allMaterials.filter(material => {
+            const matchesQuery = !query || material.title.toLowerCase().includes(query.toLowerCase()) || 
+                               material.subject.toLowerCase().includes(query.toLowerCase());
+            const matchesFilter = filter === 'all' || material.type === filter;
+            return matchesQuery && matchesFilter;
+          });
+          
+          resultsContainer.innerHTML = filteredMaterials.map(result => 
+            `<div class="result-item animated-card">
+              <h4>${result.title}</h4>
+              <p>Subject: ${result.subject} | Type: ${result.type}</p>
+              <button class="animated-btn" onclick="accessMaterial('${result.title}')">📝 View PDF</button>
+              <button class="animated-btn" onclick="sendToEmail('${result.title}', '${result.subject}')">📧 Send to Email</button>
+            </div>`
+          ).join('') || '<p>No materials found matching your search.</p>';
+        })
+        .catch(error => {
+          console.error('Error loading materials:', error);
+          resultsContainer.innerHTML = '<p>Error loading materials. Please try again.</p>';
+        });
+    }
+    
+    function accessMaterial(title) {
+      // Open PDF in new tab
+      const pdfUrl = `/view-pdf/${encodeURIComponent(title)}`;
+      window.open(pdfUrl, '_blank');
+    }
+    
+    function sendToEmail(title, subject) {
+      const content = `Study material for ${subject}. Access this material through our platform for detailed content and exercises.\n\nThis material includes:\n- Comprehensive notes\n- Practice exercises\n- Reference materials\n\nLogin to our platform for full access to interactive content.`;
+      
+      fetch('/send-material', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({title: title, content: content})
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Material sent to your email!');
+        } else {
+          if (data.action === 'profile') {
+            if (confirm(data.message + '\n\nWould you like to go to Profile settings now?')) {
+              window.location.href = '/profile';
+            }
+          } else {
+            alert('Error: ' + (data.error || 'Failed to send'));
+          }
+        }
+      })
+      .catch(error => {
+        alert('Error sending material');
+      });
+    }
+  </script>
+</body>
+</html>

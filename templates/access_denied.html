@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Access Denied - Smart Study Platform</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>🚫 Access Denied</h1>
+    <div style="position: absolute; top: 20px; right: 20px; color: white;">
+      <a href="/platform" style="color: white; text-decoration: none; margin-right: 15px;">← Back to Platform</a>
+      <a href="/logout" style="color: #ff4d4d; text-decoration: none;">Logout</a>
+    </div>
+  </header>
+
+  <section style="text-align: center; padding: 50px;">
+    <div style="background: #f8d7da; color: #721c24; padding: 30px; border-radius: 10px; max-width: 500px; margin: 0 auto;">
+      <h2>👨‍🏫 Teacher Access Required</h2>
+      <p>{{ message }}</p>
+      
+      <div style="margin-top: 30px;">
+        <a href="/register" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 10px;">
+          📝 Register as Teacher
+        </a>
+        <a href="/platform" style="background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 10px;">
+          🏠 Back to Platform
+        </a>
+      </div>
+    </div>
+  </section>
+</body>
+</html>
