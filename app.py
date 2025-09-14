@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify, send_from_directory,
 import sqlite3
 import smtplib
 import os
+import json
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
@@ -146,15 +147,6 @@ def init_db():
     conn = sqlite3.connect('leaderboard.db')
     cursor = conn.cursor()
     
-    # Create exam database structure
-    try:
-        with open('exam_database.sql', 'r') as f:
-            sql_script = f.read()
-        cursor.executescript(sql_script)
-        print("Exam database created successfully")
-    except Exception as e:
-        print(f"Error creating exam database: {e}")
-    
     # Create users table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
@@ -179,8 +171,19 @@ def init_db():
         )
     """)
     
+    # Create simple leaderboard table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS leaderboard (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            score INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
     conn.commit()
     conn.close()
+    print("Fresh database created successfully")
 
 init_db()
 
@@ -190,6 +193,32 @@ try:
     print("Default teacher account created: teacher/teacher123")
 except:
     print("Teacher account already exists or creation failed")
+
+# Add sample leaderboard data
+try:
+    conn = sqlite3.connect('leaderboard.db')
+    cursor = conn.cursor()
+    
+    # Check if leaderboard is empty
+    cursor.execute("SELECT COUNT(*) FROM leaderboard")
+    count = cursor.fetchone()[0]
+    
+    if count == 0:
+        sample_scores = [
+            ('Alex Johnson', 95),
+            ('Sarah Chen', 92),
+            ('Mike Davis', 88),
+            ('Emma Wilson', 85),
+            ('John Smith', 82)
+        ]
+        
+        cursor.executemany("INSERT INTO leaderboard (name, score) VALUES (?, ?)", sample_scores)
+        conn.commit()
+        print("Sample leaderboard data added")
+    
+    conn.close()
+except Exception as e:
+    print(f"Error adding sample data: {e}")
 
 
 
@@ -237,15 +266,15 @@ def logout():
     return redirect(url_for('login'))
 
 @app.route("/leaderboard")
-def index():
+def leaderboard_page():
     if 'username' not in session:
         return redirect(url_for('login'))
     conn = sqlite3.connect('leaderboard.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM leaderboard ORDER BY score DESC")
+    cursor.execute("SELECT name, score FROM leaderboard ORDER BY score DESC LIMIT 10")
     leaderboard = cursor.fetchall()
     conn.close()
-    return render_template("index.html", leaderboard=leaderboard)
+    return render_template("leaderboard.html", leaderboard=leaderboard)
 
 @app.route("/submit", methods=["POST"])
 def submit():
@@ -257,12 +286,8 @@ def submit():
     conn = sqlite3.connect('leaderboard.db')
     cursor = conn.cursor()
     
-    # Get the next rank
-    cursor.execute("SELECT COUNT(*) FROM leaderboard")
-    rank = cursor.fetchone()[0] + 1
-
-    # Insert into database
-    cursor.execute("INSERT INTO leaderboard (rank, name, score) VALUES (?, ?, ?)", (rank, name, score))
+    # Insert into database (no rank column in new structure)
+    cursor.execute("INSERT INTO leaderboard (name, score) VALUES (?, ?)", (name, score))
     conn.commit()
     conn.close()
 
@@ -290,12 +315,14 @@ def exam_mode():
 def api_leaderboard():
     conn = sqlite3.connect('leaderboard.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT rank, name, score FROM leaderboard ORDER BY score DESC LIMIT 10")
+    
+    # Get top 10 scores from leaderboard
+    cursor.execute("SELECT name, score FROM leaderboard ORDER BY score DESC LIMIT 10")
     leaderboard = cursor.fetchall()
     conn.close()
     
-    result = [{"rank": row[0], "name": row[1], "score": row[2]} for row in leaderboard]
-    print(f"API returning: {result}")
+    result = [{"name": row[0], "score": row[1], "average": row[1]} for row in leaderboard]
+    print(f"Leaderboard API returning: {result}")
     return jsonify(result)
 
 @app.route("/submit-exam", methods=["POST"])
@@ -308,9 +335,7 @@ def submit_exam():
     
     conn = sqlite3.connect('leaderboard.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM leaderboard")
-    rank = cursor.fetchone()[0] + 1
-    cursor.execute("INSERT INTO leaderboard (rank, name, score) VALUES (?, ?, ?)", (rank, name, score))
+    cursor.execute("INSERT INTO leaderboard (name, score) VALUES (?, ?)", (name, score))
     conn.commit()
     conn.close()
     
@@ -539,6 +564,15 @@ def api_user_profile():
         "has_email": bool(user_email)
     })
 
+@app.route("/api/quiz-questions")
+def get_quiz_questions():
+    try:
+        with open('quizzes.json', 'r') as f:
+            quiz_data = json.load(f)
+        return jsonify(quiz_data['questions'])
+    except Exception as e:
+        return jsonify({"error": "Failed to load questions"}), 500
+
 @app.route("/submit-exam-result", methods=["POST"])
 def submit_exam_result():
     if 'username' not in session:
@@ -554,11 +588,8 @@ def submit_exam_result():
     conn = sqlite3.connect('leaderboard.db')
     cursor = conn.cursor()
     
-    # Insert or update leaderboard directly
-    cursor.execute("""
-        INSERT OR REPLACE INTO leaderboard (student_name, total_score, average_percentage, exams_taken)
-        VALUES (?, ?, ?, 1)
-    """, (student_name, marks, percentage))
+    # Insert exam score into leaderboard
+    cursor.execute("INSERT INTO leaderboard (name, score) VALUES (?, ?)", (student_name, marks))
     
     conn.commit()
     conn.close()

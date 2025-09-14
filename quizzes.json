@@ -1,0 +1,74 @@
+{
+  "questions": [
+    {
+      "id": 1,
+      "question": "What is the square root of 144?",
+      "options": ["10", "12", "14", "16"],
+      "correct": 1,
+      "subject": "Mathematics"
+    },
+    {
+      "id": 2,
+      "question": "Which programming language is known for web development?",
+      "options": ["Python", "JavaScript", "C++", "Assembly"],
+      "correct": 1,
+      "subject": "Computer Science"
+    },
+    {
+      "id": 3,
+      "question": "What is the capital of France?",
+      "options": ["London", "Paris", "Berlin", "Madrid"],
+      "correct": 1,
+      "subject": "Geography"
+    },
+    {
+      "id": 4,
+      "question": "Which element has the chemical symbol 'O'?",
+      "options": ["Gold", "Oxygen", "Silver", "Iron"],
+      "correct": 1,
+      "subject": "Chemistry"
+    },
+    {
+      "id": 5,
+      "question": "What is the largest planet in our solar system?",
+      "options": ["Earth", "Mars", "Jupiter", "Saturn"],
+      "correct": 2,
+      "subject": "Science"
+    },
+    {
+      "id": 6,
+      "question": "Which organ pumps blood in the human body?",
+      "options": ["Liver", "Heart", "Lungs", "Kidney"],
+      "correct": 1,
+      "subject": "Biology"
+    },
+    {
+      "id": 7,
+      "question": "What is 15 × 8?",
+      "options": ["110", "120", "130", "140"],
+      "correct": 1,
+      "subject": "Mathematics"
+    },
+    {
+      "id": 8,
+      "question": "In which year did World War II end?",
+      "options": ["1944", "1945", "1946", "1947"],
+      "correct": 1,
+      "subject": "History"
+    },
+    {
+      "id": 9,
+      "question": "What does 'HTTP' stand for?",
+      "options": ["HyperText Transfer Protocol", "High Tech Transfer Process", "Home Tool Transfer Protocol", "Hybrid Text Transfer Process"],
+      "correct": 0,
+      "subject": "Computer Science"
+    },
+    {
+      "id": 10,
+      "question": "Which country is known as the Land of the Rising Sun?",
+      "options": ["China", "Japan", "Korea", "Thailand"],
+      "correct": 1,
+      "subject": "Geography"
+    }
+  ]
+}

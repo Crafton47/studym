@@ -127,6 +127,8 @@
     let currentQuestion = 1;
     let totalQuestions = 10;
     let timeLeft = 1800; // 30 minutes in seconds
+    let questions = [];
+    let userAnswers = {};
 
     // Initialize question navigation
     function initQuestionNav() {
@@ -178,7 +180,32 @@
     }
 
     function updateQuestion() {
-      document.getElementById('current-question').textContent = currentQuestion;
+      const questionIndex = currentQuestion - 1;
+      const question = questions[questionIndex];
+      
+      if (question) {
+        document.getElementById('current-question').textContent = currentQuestion;
+        document.getElementById('question-text').textContent = question.question;
+        
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+        
+        question.options.forEach((option, index) => {
+          const label = document.createElement('label');
+          label.className = 'option';
+          label.innerHTML = `
+            <input type="radio" name="answer" value="${index}" style="margin-right: 10px;">
+            ${option}
+          `;
+          optionsContainer.appendChild(label);
+        });
+        
+        // Restore previous answer if exists
+        if (userAnswers[questionIndex] !== undefined) {
+          const radio = optionsContainer.querySelector(`input[value="${userAnswers[questionIndex]}"]`);
+          if (radio) radio.checked = true;
+        }
+      }
       
       // Update navigation buttons
       document.querySelectorAll('.question-btn').forEach((btn, index) => {
@@ -197,9 +224,15 @@
       if (confirm('Are you sure you want to submit the exam?')) {
         const name = prompt('Enter your name for the leaderboard:');
         if (name) {
-          // Calculate score based on answered questions (demo calculation)
-          const answeredQuestions = document.querySelectorAll('.question-btn.answered').length;
-          const score = Math.floor((answeredQuestions / totalQuestions) * 100);
+          // Calculate actual score based on correct answers
+          let correctAnswers = 0;
+          questions.forEach((q, index) => {
+            if (userAnswers[index] === q.correct) {
+              correctAnswers++;
+            }
+          });
+          
+          const score = Math.floor((correctAnswers / totalQuestions) * 100);
           
           fetch('/submit-exam-result', {
             method: 'POST',
@@ -208,7 +241,7 @@
           })
           .then(response => response.json())
           .then(data => {
-            alert(`Exam completed! Your score: ${score}% has been added to the leaderboard.`);
+            alert(`Exam completed! Your score: ${correctAnswers}/${totalQuestions} (${score}%) has been added to the leaderboard.`);
             window.location.href = '/platform';
           })
           .catch(error => {
@@ -224,16 +257,33 @@
       }
     }
 
+    // Load questions and initialize exam
+    function loadQuestions() {
+      fetch('/api/quiz-questions')
+        .then(response => response.json())
+        .then(data => {
+          questions = data;
+          totalQuestions = questions.length;
+          document.getElementById('total-questions').textContent = totalQuestions;
+          initQuestionNav();
+          updateQuestion();
+        })
+        .catch(error => {
+          alert('Error loading questions. Please refresh the page.');
+        });
+    }
+    
     // Initialize the exam
     window.onload = function() {
-      initQuestionNav();
+      loadQuestions();
       startTimer();
-      updateQuestion();
     };
 
     // Handle option selection
     document.addEventListener('change', function(e) {
       if (e.target.name === 'answer') {
+        // Save user answer
+        userAnswers[currentQuestion - 1] = parseInt(e.target.value);
         // Mark question as answered
         document.querySelectorAll('.question-btn')[currentQuestion - 1].classList.add('answered');
       }
